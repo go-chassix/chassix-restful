@@ -79,7 +79,7 @@ func Serve(container *restful.Container, servIndex int) {
 			APIPath:                       swaggerUICfg.API,
 			PostBuildSwaggerObjectHandler: newPostBuildOpenAPIObjectFunc()}
 		container.Add(restfulSpec.NewOpenAPIService(cfg))
-		http.Handle(swaggerUICfg.Entrypoint, http.StripPrefix(swaggerUICfg.Entrypoint, http.FileServer(http.Dir(swaggerUICfg.Dist))))
+		container.Handle(swaggerUICfg.Entrypoint, http.StripPrefix(swaggerUICfg.Entrypoint, http.FileServer(http.Dir(swaggerUICfg.Dist))))
 	}
 	//启动服务
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(config.Servers[servIndex-1].Port), container.ServeMux))
