@@ -34,14 +34,18 @@ func newPostBuildOpenAPIObjectFunc() restfulSpec.PostBuildSwaggerObjectFunc {
 				Title:       config.Spec.Title,
 				Description: config.Spec.Description,
 				Contact: &spec.ContactInfo{
-					Name:  config.Spec.Contact.Name,
-					Email: config.Spec.Contact.Email,
-					URL:   config.Spec.Contact.URL,
+					ContactInfoProps: spec.ContactInfoProps{
+						Name:  config.Spec.Contact.Name,
+						Email: config.Spec.Contact.Email,
+						URL:   config.Spec.Contact.URL,
+					},
 				},
 
 				License: &spec.License{
-					Name: config.Spec.License.Name,
-					URL:  config.Spec.License.URL,
+					LicenseProps: spec.LicenseProps{
+						Name: config.Spec.License.Name,
+						URL:  config.Spec.License.URL,
+					},
 				},
 				Version: config.Spec.Version,
 			},
