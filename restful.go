@@ -1,7 +1,6 @@
 package restfulx
 
 import (
-	"c5x.io/logx"
 	"net/http"
 	"strconv"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/go-openapi/spec"
 
 	"c5x.io/chassix"
+	"c5x.io/logx"
 )
 
 func init() {
@@ -58,24 +58,23 @@ func newPostBuildOpenAPIObjectFunc() restfulSpec.PostBuildSwaggerObjectFunc {
 }
 
 //Serve rest webservice
-func Serve(svc []*restful.WebService) {
+//func Serve(svc []*restful.WebService) {
+func Serve(container *restful.Container) {
 	log := logx.New().Category("chassix").Component("restful")
-	//restful.Filter(restFilters.RequestID)
-	//restful.Filter(restFilters.MeasureTime)
 
 	//if enable openapi setting. register swagger ui and apidocs json API.
 	if config.OpenAPI.Enabled {
 		swaggerUICfg := config.OpenAPI.UI
 		//定义swagger文档
 		cfg := restfulSpec.Config{
-			WebServices:                   svc, // you control what services are visible
+			WebServices:                   container.RegisteredWebServices(), // you control what services are visible
 			APIPath:                       swaggerUICfg.API,
 			PostBuildSwaggerObjectHandler: newPostBuildOpenAPIObjectFunc()}
-		restful.DefaultContainer.Add(restfulSpec.NewOpenAPIService(cfg))
+		container.Add(restfulSpec.NewOpenAPIService(cfg))
 		http.Handle(swaggerUICfg.Entrypoint, http.StripPrefix(swaggerUICfg.Entrypoint, http.FileServer(http.Dir(swaggerUICfg.Dist))))
 	}
 	//启动服务
-	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(config.Server.Port), nil))
+	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(config.Server.Port), container.ServeMux))
 }
 
 //AddMetaDataTags add metadata tags to Webservice all routes
