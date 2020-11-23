@@ -1,6 +1,7 @@
 package restfulx
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 
@@ -61,9 +62,12 @@ func newPostBuildOpenAPIObjectFunc() restfulSpec.PostBuildSwaggerObjectFunc {
 	}
 }
 
-//Serve rest webservice
+//Serve rest webservice index start from 1
 //func Serve(svc []*restful.WebService) {
-func Serve(container *restful.Container) {
+func Serve(container *restful.Container, servIndex int) {
+	if servIndex < 1 || servIndex > len(config.Servers) {
+		log.Fatal("server config error, pls check your servers config")
+	}
 	log := logx.New().Category("chassix").Component("restful")
 
 	//if enable openapi setting. register swagger ui and apidocs json API.
@@ -78,7 +82,13 @@ func Serve(container *restful.Container) {
 		http.Handle(swaggerUICfg.Entrypoint, http.StripPrefix(swaggerUICfg.Entrypoint, http.FileServer(http.Dir(swaggerUICfg.Dist))))
 	}
 	//启动服务
-	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(config.Server.Port), container.ServeMux))
+	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(config.Servers[servIndex-1].Port), container.ServeMux))
+}
+
+//ServeDefault serve with default container and first server config
+//func Serve(svc []*restful.WebService) {
+func ServeDefault() {
+	Serve(restful.DefaultContainer, 1)
 }
 
 //AddMetaDataTags add metadata tags to Webservice all routes

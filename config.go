@@ -1,8 +1,8 @@
 package restfulx
 
 type RestfulConfig struct {
-	OpenAPI OpenAPIConfig `yaml:"openapi"`
-	Server  ServerConfig  `yaml:"server"`
+	OpenAPI OpenAPIConfig  `yaml:"openapi"`
+	Servers []ServerConfig `yaml:"servers"`
 }
 
 //ServerConfig
