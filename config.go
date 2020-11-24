@@ -8,7 +8,6 @@ type RestfulConfig struct {
 //ServerConfig
 type ServerConfig struct {
 	Name        string
-	Port        int
 	Addr        string
 	Description string
 	OpenAPI     OpenAPIConfig `yaml:"openapi"`

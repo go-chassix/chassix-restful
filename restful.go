@@ -2,13 +2,11 @@ package restfulx
 
 import (
 	"fmt"
-	"log"
-	"net/http"
-	"strconv"
-
 	restfulSpec "github.com/emicklei/go-restful-openapi/v2"
 	"github.com/emicklei/go-restful/v3"
 	"github.com/go-openapi/spec"
+	"log"
+	"net/http"
 
 	"c5x.io/chassix"
 	"c5x.io/logx"
@@ -97,8 +95,15 @@ func Serve(container *restful.Container, servIndex int) {
 		container.Handle(swaggerUICfg.Entrypoint, http.StripPrefix(swaggerUICfg.Entrypoint, http.FileServer(http.Dir(swaggerUICfg.Dist))))
 	}
 	//启动服务
-	fmt.Printf("Chassix restfulx run  server [%s] on [%d]\n", serverCfg.Name, serverCfg.Port)
-	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(serverCfg.Port), container.ServeMux))
+	//log.Fatal(
+	err := http.ListenAndServe(serverCfg.Addr, container.ServeMux)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("server [%s] started [%s]\n", serverCfg.Name, serverCfg.Addr)
+	if serverCfg.OpenAPI.Enabled && config.OpenAPI.UI.Entrypoint != "" {
+		fmt.Printf("server %s apidocs addr %s\n", serverCfg.Name, serverCfg.Addr+config.OpenAPI.UI.Entrypoint)
+	}
 }
 
 //ServeDefault serve with default container and first server config
