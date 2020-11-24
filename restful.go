@@ -65,7 +65,13 @@ func newPostBuildOpenAPIObjectFunc(serverIndex int) restfulSpec.PostBuildSwagger
 		}
 
 		var nTags []spec.Tag
-		for _, tag := range config.Tags {
+		var tags []OpenapiTagConfig
+		if len(serverCfg.OpenAPI.Tags) > 0 {
+			tags = serverCfg.OpenAPI.Tags
+		} else {
+			tags = config.Tags
+		}
+		for _, tag := range tags {
 			nTag := spec.Tag{TagProps: spec.TagProps{Name: tag.Name, Description: tag.Description}}
 
 			nTags = append(nTags, nTag)
