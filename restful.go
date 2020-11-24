@@ -147,7 +147,7 @@ func AddMetaDataTags(ws *restful.WebService, tags []string) {
 	}
 }
 
-//AddMetaDataTags add metadata tags to Webservice all routes
+//AddMetaDataBasicAuthSecurity add metadata tags to Webservice all routes
 func AddMetaDataBasicAuthSecurity(ws *restful.WebService) {
 	routes := ws.Routes()
 	for i, route := range routes {
