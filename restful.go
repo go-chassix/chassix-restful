@@ -87,6 +87,9 @@ func newPostBuildOpenAPIObjectFunc(serverIndex int) restfulSpec.PostBuildSwagger
 			swo.SecurityDefinitions = map[string]*spec.SecurityScheme{
 				"basicAuth": spec.BasicAuth(),
 			}
+			auth := make(map[string][]string)
+			auth["basicAuth"] = []string{}
+			swo.Security = append(swo.Security, auth)
 		}
 
 	}
@@ -145,3 +148,16 @@ func AddMetaDataTags(ws *restful.WebService, tags []string) {
 		routes[i].Metadata[KeyOpenAPITags] = tags
 	}
 }
+
+////AddMetaDataBasicAuthSecurity add metadata tags to Webservice all routes
+//func AddMetaDataBasicAuthSecurity(ws *restful.WebService) {
+//	routes := ws.Routes()
+//	for i, route := range routes {
+//		if route.Metadata == nil {
+//			routes[i].Metadata = map[string]interface{}{}
+//		}
+//		routes[i].Metadata[SecurityDefinitionKey] = BasicAuthSecurity{
+//			Name: "basic",
+//		}
+//	}
+//}
