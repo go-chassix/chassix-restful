@@ -77,6 +77,13 @@ func newPostBuildOpenAPIObjectFunc(serverIndex int) restfulSpec.PostBuildSwagger
 			nTags = append(nTags, nTag)
 		}
 		swo.Tags = nTags
+		// setup security definitions
+		if serverCfg.OpenAPI.BasePath == "basic" {
+			swo.SecurityDefinitions = map[string]*spec.SecurityScheme{
+				"basic": spec.BasicAuth(),
+			}
+		}
+
 	}
 }
 

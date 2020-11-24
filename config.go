@@ -19,6 +19,7 @@ type OpenAPIConfig struct {
 	Host     string   `yaml:"host"`
 	BasePath string   `yaml:"basePath"`
 	Schemas  []string `yaml:"schemas"`
+	Auth     string
 	Spec     struct {
 		Title       string
 		Description string `yaml:"desc"`
