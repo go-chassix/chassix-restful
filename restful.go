@@ -1,7 +1,6 @@
 package restfulx
 
 import (
-	"errors"
 	"fmt"
 	restfulSpec "github.com/emicklei/go-restful-openapi/v2"
 	"github.com/emicklei/go-restful/v3"
@@ -86,7 +85,7 @@ func newPostBuildOpenAPIObjectFunc(serverIndex int) restfulSpec.PostBuildSwagger
 		// setup security definitions
 		if serverCfg.OpenAPI.Auth == "basic" {
 			swo.SecurityDefinitions = map[string]*spec.SecurityScheme{
-				"basic": spec.BasicAuth(),
+				"basicAuth": spec.BasicAuth(),
 			}
 		}
 
@@ -145,28 +144,4 @@ func AddMetaDataTags(ws *restful.WebService, tags []string) {
 		}
 		routes[i].Metadata[KeyOpenAPITags] = tags
 	}
-}
-
-//AddMetaDataBasicAuthSecurity add metadata tags to Webservice all routes
-func AddMetaDataBasicAuthSecurity(ws *restful.WebService) {
-	routes := ws.Routes()
-	for i, route := range routes {
-		if route.Metadata == nil {
-			routes[i].Metadata = map[string]interface{}{}
-		}
-		routes[i].Metadata[SecurityDefinitionKey] = BasicAuthSecurity{
-			Name: "basic",
-		}
-	}
-}
-
-type BasicAuthSecurity struct {
-	Name string // SecurityDefinition name
-}
-
-func (s *BasicAuthSecurity) Valid() error {
-	if s.Name == "basic" {
-		return nil
-	}
-	return errors.New("no basic auth")
 }
