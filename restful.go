@@ -27,7 +27,7 @@ func newPostBuildOpenAPIObjectFunc(serverIndex int) restfulSpec.PostBuildSwagger
 	return func(swo *spec.Swagger) {
 		serverCfg := config.Servers[serverIndex-1]
 		config := config.OpenAPI
-		swo.Host = config.Host
+		swo.Host = serverCfg.Addr
 		swo.BasePath = config.BasePath
 		swo.Schemes = config.Schemas
 
