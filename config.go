@@ -7,8 +7,11 @@ type RestfulConfig struct {
 
 //ServerConfig
 type ServerConfig struct {
-	Port int
-	Addr string
+	Name        string
+	Port        int
+	Addr        string
+	Description string
+	OpenAPI     OpenAPIConfig `yaml:"openapi"`
 }
 
 //OpenAPIConfig open api config

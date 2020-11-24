@@ -1,6 +1,7 @@
 package restfulx
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -24,16 +25,29 @@ func init() {
 const KeyOpenAPITags = restfulSpec.KeyOpenAPITags
 
 //newPostBuildOpenAPIObjectFunc open api api docs data
-func newPostBuildOpenAPIObjectFunc() restfulSpec.PostBuildSwaggerObjectFunc {
+func newPostBuildOpenAPIObjectFunc(serverIndex int) restfulSpec.PostBuildSwaggerObjectFunc {
 	return func(swo *spec.Swagger) {
+		serverCfg := config.Servers[serverIndex-1]
 		config := config.OpenAPI
 		swo.Host = config.Host
 		swo.BasePath = config.BasePath
 		swo.Schemes = config.Schemas
+
+		var title, description string
+		if serverCfg.Name != "" {
+			title = serverCfg.Name
+		} else {
+			title = config.Spec.Title
+		}
+		if serverCfg.Description != "" {
+			description = serverCfg.Description
+		} else {
+			description = config.Spec.Description
+		}
 		swo.Info = &spec.Info{
 			InfoProps: spec.InfoProps{
-				Title:       config.Spec.Title,
-				Description: config.Spec.Description,
+				Title:       title,
+				Description: description,
 				Contact: &spec.ContactInfo{
 					ContactInfoProps: spec.ContactInfoProps{
 						Name:  config.Spec.Contact.Name,
@@ -70,19 +84,21 @@ func Serve(container *restful.Container, servIndex int) {
 	}
 	log := logx.New().Category("chassix").Component("restful")
 
+	serverCfg := config.Servers[servIndex-1]
 	//if enable openapi setting. register swagger ui and apidocs json API.
-	if config.OpenAPI.Enabled {
+	if serverCfg.OpenAPI.Enabled {
 		swaggerUICfg := config.OpenAPI.UI
 		//定义swagger文档
 		cfg := restfulSpec.Config{
 			WebServices:                   container.RegisteredWebServices(), // you control what services are visible
 			APIPath:                       swaggerUICfg.API,
-			PostBuildSwaggerObjectHandler: newPostBuildOpenAPIObjectFunc()}
+			PostBuildSwaggerObjectHandler: newPostBuildOpenAPIObjectFunc(servIndex)}
 		container.Add(restfulSpec.NewOpenAPIService(cfg))
 		container.Handle(swaggerUICfg.Entrypoint, http.StripPrefix(swaggerUICfg.Entrypoint, http.FileServer(http.Dir(swaggerUICfg.Dist))))
 	}
 	//启动服务
-	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(config.Servers[servIndex-1].Port), container.ServeMux))
+	fmt.Printf("Chassix restfulx run  server [%s] on [%d]\n", serverCfg.Name, serverCfg.Port)
+	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(serverCfg.Port), container.ServeMux))
 }
 
 //ServeDefault serve with default container and first server config
