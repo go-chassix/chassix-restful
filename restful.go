@@ -95,15 +95,11 @@ func Serve(container *restful.Container, servIndex int) {
 		container.Handle(swaggerUICfg.Entrypoint, http.StripPrefix(swaggerUICfg.Entrypoint, http.FileServer(http.Dir(swaggerUICfg.Dist))))
 	}
 	//启动服务
-	//log.Fatal(
-	err := http.ListenAndServe(serverCfg.Addr, container.ServeMux)
-	if err != nil {
-		log.Fatal(err)
-	}
 	fmt.Printf("server [%s] started [%s]\n", serverCfg.Name, serverCfg.Addr)
 	if serverCfg.OpenAPI.Enabled && config.OpenAPI.UI.Entrypoint != "" {
 		fmt.Printf("server %s apidocs addr %s\n", serverCfg.Name, serverCfg.Addr+config.OpenAPI.UI.Entrypoint)
 	}
+	log.Fatal(http.ListenAndServe(serverCfg.Addr, container.ServeMux))
 }
 
 //ServeDefault serve with default container and first server config
