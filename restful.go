@@ -118,10 +118,10 @@ func Serve(container *restful.Container, servIndex int) {
 	//启动服务
 	fmt.Printf("server [%s] starting [http://%s]\n", serverCfg.Name, serverCfg.Addr)
 	if serverCfg.OpenAPI.Enabled && config.OpenAPI.UI.Entrypoint != "" {
-		fmt.Printf("server [%s] apidocs addr [http://%s?url=http://%s]\n",
+		fmt.Printf("server [%s] apidocs addr [http://%s?url=%s]\n",
 			serverCfg.Name,
 			serverCfg.Addr+config.OpenAPI.UI.Entrypoint,
-			serverCfg.Addr+config.OpenAPI.UI.API)
+			config.OpenAPI.UI.API)
 	}
 	log.Fatal(http.ListenAndServe(serverCfg.Addr, container.ServeMux))
 }
