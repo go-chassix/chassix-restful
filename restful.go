@@ -127,7 +127,6 @@ func Serve(container *restful.Container, servIndex int) {
 }
 
 //ServeDefault serve with default container and first server config
-//func Serve(svc []*restful.WebService) {
 func ServeDefault() {
 	Serve(restful.DefaultContainer, 1)
 }
@@ -152,15 +151,3 @@ func AddMetaDataTags(ws *restful.WebService, tags []string) {
 	}
 }
 
-////AddMetaDataBasicAuthSecurity add metadata tags to Webservice all routes
-//func AddMetaDataBasicAuthSecurity(ws *restful.WebService) {
-//	routes := ws.Routes()
-//	for i, route := range routes {
-//		if route.Metadata == nil {
-//			routes[i].Metadata = map[string]interface{}{}
-//		}
-//		routes[i].Metadata[SecurityDefinitionKey] = BasicAuthSecurity{
-//			Name: "basic",
-//		}
-//	}
-//}
