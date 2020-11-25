@@ -121,7 +121,7 @@ func Serve(container *restful.Container, servIndex int) {
 		fmt.Printf("server [%s] apidocs addr [http://%s?url=%s]\n",
 			serverCfg.Name,
 			serverCfg.Addr+config.OpenAPI.UI.Entrypoint,
-			config.OpenAPI.UI.API)
+			serverCfg.Addr+config.OpenAPI.UI.API)
 	}
 	log.Fatal(http.ListenAndServe(serverCfg.Addr, container.ServeMux))
 }
@@ -150,4 +150,3 @@ func AddMetaDataTags(ws *restful.WebService, tags []string) {
 		routes[i].Metadata[KeyOpenAPITags] = tags
 	}
 }
-
