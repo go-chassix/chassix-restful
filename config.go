@@ -40,9 +40,11 @@ type OpenAPIConfig struct {
 
 //OpenapiUIConfig swagger ui config
 type OpenapiUIConfig struct {
+	APIHost    string `yaml:"api_host"`
 	API        string `yaml:"api"`
 	Dist       string `yaml:"dist"`
 	Entrypoint string `yaml:"entrypoint"`
+	External   string `yaml:"external"`
 }
 
 //OpenapiTagConfig openapi tag
