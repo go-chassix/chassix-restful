@@ -5,8 +5,11 @@ import (
 	restfulSpec "github.com/emicklei/go-restful-openapi/v2"
 	"github.com/emicklei/go-restful/v3"
 	"github.com/go-openapi/spec"
+	"github.com/imdario/mergo"
 	"log"
 	"net/http"
+	"net/url"
+	"path"
 
 	"c5x.io/chassix"
 	"c5x.io/logx"
@@ -104,9 +107,18 @@ func Serve(container *restful.Container, servIndex int) {
 	log := logx.New().Category("chassix").Component("restful")
 
 	serverCfg := config.Servers[servIndex-1]
+
+	//merge config
+	//apiCfg := &(serverCfg.OpenAPI)
+	mergo.Merge(&(serverCfg.OpenAPI), config.OpenAPI)
+
+	log.Debugf("server [%d] config merged: %+v", servIndex, serverCfg.OpenAPI)
+
+	var corsAllowedHost string
+
 	//if enable openapi setting. register swagger ui and apidocs json API.
 	if serverCfg.OpenAPI.Enabled {
-		swaggerUICfg := config.OpenAPI.UI
+		swaggerUICfg := serverCfg.OpenAPI.UI
 		//定义swagger文档
 		cfg := restfulSpec.Config{
 			WebServices:                   container.RegisteredWebServices(), // you control what services are visible
@@ -114,18 +126,54 @@ func Serve(container *restful.Container, servIndex int) {
 			PostBuildSwaggerObjectHandler: newPostBuildOpenAPIObjectFunc(servIndex)}
 		container.Add(restfulSpec.NewOpenAPIService(cfg))
 		//if setting swagger ui dist will handle swagger ui route
-		if serverCfg.OpenAPI.Enabled && swaggerUICfg.Entrypoint != "" && swaggerUICfg.Dist != "" {
+		if serverCfg.OpenAPI.Enabled && swaggerUICfg.External != "" {
+			apiUrl, err := url.Parse(serverCfg.OpenAPI.UI.URL)
+			if err != nil {
+				log.Fatalln("openapi ui url invalid\n", err)
+			}
+			apiUrl.Path = path.Join(apiUrl.Path, serverCfg.OpenAPI.UI.API)
+			corsAllowedHost = apiUrl.Host
+			fmt.Printf("server [%s] apidocs addr [%s?url=%s]\n",
+				serverCfg.Name,
+				swaggerUICfg.External,
+				apiUrl.String())
+			//为OPENAPI添加cors跨域支持
+			if corsAllowedHost != "" {
+				// Add container filter to enable CORS
+				cors := restful.CrossOriginResourceSharing{
+
+					ExposeHeaders:  []string{"X-My-Header"},
+					AllowedHeaders: []string{"Content-Type", "Accept"},
+					AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "BATCH"},
+
+					CookiesAllowed: false,
+					Container:      container}
+				container.Filter(cors.Filter)
+
+				// Add container filter to respond to OPTIONS
+				container.Filter(container.OPTIONSFilter)
+			}
+		} else if serverCfg.OpenAPI.Enabled && swaggerUICfg.Entrypoint != "" && swaggerUICfg.Dist != "" {
 			container.Handle(swaggerUICfg.Entrypoint, http.StripPrefix(swaggerUICfg.Entrypoint, http.FileServer(http.Dir(swaggerUICfg.Dist))))
+			if serverCfg.OpenAPI.Enabled && config.OpenAPI.UI.Entrypoint != "" {
+				uiURL, err := url.Parse(swaggerUICfg.URL)
+				//copy
+				apiURL := *uiURL
+				if err != nil {
+					log.Fatalln("swagger ui URL invalid\n", err)
+				}
+				uiURL.Path = path.Join(uiURL.Path, swaggerUICfg.Entrypoint)
+				apiURL.Path = path.Join(apiURL.Path, swaggerUICfg.API)
+				fmt.Printf("server [%s] apidocs addr [%s?url=%s]\n",
+					serverCfg.Name,
+					uiURL.String(),
+					apiURL.String())
+			}
 		}
 	}
 	//启动服务
 	fmt.Printf("server [%s] starting [http://%s]\n", serverCfg.Name, serverCfg.Addr)
-	if serverCfg.OpenAPI.Enabled && config.OpenAPI.UI.Entrypoint != "" {
-		fmt.Printf("server [%s] apidocs addr [http://%s?url=http://%s]\n",
-			serverCfg.Name,
-			config.OpenAPI.Host,
-			serverCfg.Addr+config.OpenAPI.UI.API)
-	}
+
 	log.Fatal(http.ListenAndServe(serverCfg.Addr, container.ServeMux))
 }
 

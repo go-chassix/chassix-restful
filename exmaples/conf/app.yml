@@ -1,0 +1,55 @@
+app:
+  name: chassix-restfulx-example
+  version: 0.1.0
+  env: dev
+  debug: no
+servers:
+  - name: svc-1
+    addr: localhost:8085
+    description: service 1
+    openapi:
+      enabled: true
+      ui:
+        url: http://localhost:8085
+        external: http://localhost:8086/apidocs/
+  - name: svc-2
+    addr: localhost:8086
+    description: service 2
+    openapi:
+      enabled: true
+      auth: basic
+      spec:
+        title: openapi server
+      tags:
+        - name: User
+          desc: "用户"
+      ui:
+        url: http://localhost:8086
+logging:
+  level: debug  #0 panic 0 fatal 1 error 2 warn 3 info 4 debug 5 trace 6
+  report_caller: yes
+  no_colors: false
+  caller_first: no
+  hide_keys: yes
+  no_uppercase_level: yes
+openapi:
+  enabled: false
+  spec:
+    title: chassix restfulx example
+    desc: api docs
+    contact:
+      name: restfulx
+      email: support@c5x.io
+      url: https://c5x.io/restfulx
+    license:
+      name: test
+      url: test
+    version: 1.0
+  basePath: /
+  schemas:
+    - http
+    - https
+  ui:
+    api: /apidocs.json
+    dist: ./swagger-ui/
+    entrypoint: /apidocs/
