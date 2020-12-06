@@ -31,24 +31,22 @@ const (
 )
 
 //newPostBuildOpenAPIObjectFunc open api api docs data
-func newPostBuildOpenAPIObjectFunc(serverIndex int) restfulSpec.PostBuildSwaggerObjectFunc {
+func newPostBuildOpenAPIObjectFunc(config ServerConfig) restfulSpec.PostBuildSwaggerObjectFunc {
 	return func(swo *spec.Swagger) {
-		serverCfg := config.Servers[serverIndex-1]
-		config := config.OpenAPI
-		swo.Host = serverCfg.Addr
-		swo.BasePath = config.BasePath
-		swo.Schemes = config.Schemas
+		swo.Host = config.OpenAPI.Host
+		swo.BasePath = config.OpenAPI.BasePath
+		swo.Schemes = config.OpenAPI.Schemas
 
 		var title, description string
-		if serverCfg.Name != "" {
-			title = serverCfg.Name
+		if config.Name != "" {
+			title = config.Name
 		} else {
-			title = config.Spec.Title
+			title = config.OpenAPI.Spec.Title
 		}
-		if serverCfg.Description != "" {
-			description = serverCfg.Description
+		if config.Description != "" {
+			description = config.Description
 		} else {
-			description = config.Spec.Description
+			description = config.OpenAPI.Spec.Description
 		}
 		swo.Info = &spec.Info{
 			InfoProps: spec.InfoProps{
@@ -56,28 +54,28 @@ func newPostBuildOpenAPIObjectFunc(serverIndex int) restfulSpec.PostBuildSwagger
 				Description: description,
 				Contact: &spec.ContactInfo{
 					ContactInfoProps: spec.ContactInfoProps{
-						Name:  config.Spec.Contact.Name,
-						Email: config.Spec.Contact.Email,
-						URL:   config.Spec.Contact.URL,
+						Name:  config.OpenAPI.Spec.Contact.Name,
+						Email: config.OpenAPI.Spec.Contact.Email,
+						URL:   config.OpenAPI.Spec.Contact.URL,
 					},
 				},
 
 				License: &spec.License{
 					LicenseProps: spec.LicenseProps{
-						Name: config.Spec.License.Name,
-						URL:  config.Spec.License.URL,
+						Name: config.OpenAPI.Spec.License.Name,
+						URL:  config.OpenAPI.Spec.License.URL,
 					},
 				},
-				Version: config.Spec.Version,
+				Version: config.OpenAPI.Spec.Version,
 			},
 		}
 
 		var nTags []spec.Tag
 		var tags []OpenapiTagConfig
-		if len(serverCfg.OpenAPI.Tags) > 0 {
-			tags = serverCfg.OpenAPI.Tags
+		if len(config.OpenAPI.Tags) > 0 {
+			tags = config.OpenAPI.Tags
 		} else {
-			tags = config.Tags
+			tags = config.OpenAPI.Tags
 		}
 		for _, tag := range tags {
 			nTag := spec.Tag{TagProps: spec.TagProps{Name: tag.Name, Description: tag.Description}}
@@ -86,7 +84,7 @@ func newPostBuildOpenAPIObjectFunc(serverIndex int) restfulSpec.PostBuildSwagger
 		}
 		swo.Tags = nTags
 		// setup security definitions
-		if serverCfg.OpenAPI.Auth == "basic" {
+		if config.OpenAPI.Auth == "basic" {
 			swo.SecurityDefinitions = map[string]*spec.SecurityScheme{
 				"basicAuth": spec.BasicAuth(),
 			}
@@ -123,7 +121,7 @@ func Serve(container *restful.Container, servIndex int) {
 		cfg := restfulSpec.Config{
 			WebServices:                   container.RegisteredWebServices(), // you control what services are visible
 			APIPath:                       swaggerUICfg.API,
-			PostBuildSwaggerObjectHandler: newPostBuildOpenAPIObjectFunc(servIndex)}
+			PostBuildSwaggerObjectHandler: newPostBuildOpenAPIObjectFunc(serverCfg)}
 		container.Add(restfulSpec.NewOpenAPIService(cfg))
 		//if setting swagger ui dist will handle swagger ui route
 		if serverCfg.OpenAPI.Enabled && swaggerUICfg.External != "" {
