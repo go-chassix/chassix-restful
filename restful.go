@@ -8,7 +8,6 @@ import (
 	"github.com/imdario/mergo"
 	"log"
 	"net/http"
-	"net/url"
 	"path"
 
 	"c5x.io/chassix"
@@ -133,12 +132,9 @@ func Serve(container *restful.Container, servIndex int) {
 		container.Add(restfulSpec.NewOpenAPIService(cfg))
 		//if setting swagger ui dist will handle swagger ui route
 		if serverCfg.OpenAPI.Enabled && swaggerUICfg.External != "" {
-			apiUrl, err := url.Parse(serverCfg.OpenAPI.Host)
-			if err != nil {
-				log.Fatalln("openapi ui url invalid\n", err)
-			}
-			apiUrl.Path = path.Join(apiUrl.Path, serverCfg.OpenAPI.UI.API)
-			redirectURL = fmt.Sprintf("%s?url=%s", swaggerUICfg.External, apiUrl.String())
+
+			apiPath := schema + "://" + path.Join(serverCfg.OpenAPI.Host, serverCfg.OpenAPI.UI.API)
+			redirectURL = fmt.Sprintf("%s?url=%s", swaggerUICfg.External, apiPath)
 
 			log.Debugf("swagger ui: %s", redirectURL)
 			container.ServeMux.HandleFunc("/open_apidocs", func(w http.ResponseWriter, r *http.Request) {
