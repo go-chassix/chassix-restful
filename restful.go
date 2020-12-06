@@ -8,6 +8,7 @@ import (
 	"github.com/imdario/mergo"
 	"log"
 	"net/http"
+	"net/url"
 	"path"
 
 	"c5x.io/chassix"
@@ -111,9 +112,7 @@ func Serve(container *restful.Container, servIndex int) {
 
 	log.Debugf("server [%d] config merged: %+v", servIndex, serverCfg.OpenAPI)
 
-	var corsAllowedHost, redirectURL, schema string
-
-	corsAllowedHost = serverCfg.OpenAPI.Host
+	var redirectURL, schema string
 
 	//if enable openapi setting. register swagger ui and apidocs json API.
 	if serverCfg.OpenAPI.Enabled {
@@ -141,24 +140,28 @@ func Serve(container *restful.Container, servIndex int) {
 				http.Redirect(w, r, redirectURL, 302)
 			})
 			//为OPENAPI添加cors跨域支持
-			if corsAllowedHost != "" {
-				log.Debugf("cors allowed host %s", corsAllowedHost)
-				// Add container filter to enable CORS
-				cors := restful.CrossOriginResourceSharing{
 
-					AllowedDomains: []string{corsAllowedHost},
-					//ExposeHeaders:  []string{"X-My-Header"},
-					AllowedHeaders: []string{"Content-Type", "Accept"},
-					AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "BATCH"},
+			if externalUIURL, err := url.Parse(serverCfg.OpenAPI.UI.External); err == nil {
+				if externalUIURL.Host != "" {
+					log.Debugf("cors allowed host %s", externalUIURL.Host)
+					// Add container filter to enable CORS
+					cors := restful.CrossOriginResourceSharing{
 
-					CookiesAllowed: false,
-					Container:      container}
-				container.Filter(cors.Filter)
+						AllowedDomains: []string{externalUIURL.Host},
+						//ExposeHeaders:  []string{"X-My-Header"},
+						AllowedHeaders: []string{"Content-Type", "Accept"},
+						AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "BATCH"},
 
-				// Add container filter to respond to OPTIONS
-				container.Filter(container.OPTIONSFilter)
+						CookiesAllowed: false,
+						Container:      container}
+					container.Filter(cors.Filter)
 
+					// Add container filter to respond to OPTIONS
+					container.Filter(container.OPTIONSFilter)
+
+				}
 			}
+
 		} else if serverCfg.OpenAPI.Enabled && swaggerUICfg.Entrypoint != "" && swaggerUICfg.Dist != "" {
 			container.Handle(swaggerUICfg.Entrypoint, http.StripPrefix(swaggerUICfg.Entrypoint, http.FileServer(http.Dir(swaggerUICfg.Dist))))
 			if serverCfg.OpenAPI.Enabled && config.OpenAPI.UI.Entrypoint != "" {
