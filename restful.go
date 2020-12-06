@@ -112,10 +112,18 @@ func Serve(container *restful.Container, servIndex int) {
 
 	log.Debugf("server [%d] config merged: %+v", servIndex, serverCfg.OpenAPI)
 
-	var corsAllowedHost, redirectURL string
+	var corsAllowedHost, redirectURL, schema string
+
+	corsAllowedHost = serverCfg.OpenAPI.Host
 
 	//if enable openapi setting. register swagger ui and apidocs json API.
 	if serverCfg.OpenAPI.Enabled {
+
+		if len(serverCfg.OpenAPI.Schemas) > 0 {
+			schema = serverCfg.OpenAPI.Schemas[0]
+		} else {
+			schema = "http"
+		}
 		swaggerUICfg := serverCfg.OpenAPI.UI
 		//定义swagger文档
 		cfg := restfulSpec.Config{
@@ -125,23 +133,25 @@ func Serve(container *restful.Container, servIndex int) {
 		container.Add(restfulSpec.NewOpenAPIService(cfg))
 		//if setting swagger ui dist will handle swagger ui route
 		if serverCfg.OpenAPI.Enabled && swaggerUICfg.External != "" {
-			apiUrl, err := url.Parse(serverCfg.OpenAPI.UI.URL)
+			apiUrl, err := url.Parse(serverCfg.OpenAPI.Host)
 			if err != nil {
 				log.Fatalln("openapi ui url invalid\n", err)
 			}
 			apiUrl.Path = path.Join(apiUrl.Path, serverCfg.OpenAPI.UI.API)
-			corsAllowedHost = apiUrl.Host
 			redirectURL = fmt.Sprintf("%s?url=%s", swaggerUICfg.External, apiUrl.String())
 
+			log.Debugf("swagger ui: %s", redirectURL)
 			container.ServeMux.HandleFunc("/open_apidocs", func(w http.ResponseWriter, r *http.Request) {
-				http.Redirect(w, r, redirectURL, 301)
+				http.Redirect(w, r, redirectURL, 302)
 			})
 			//为OPENAPI添加cors跨域支持
 			if corsAllowedHost != "" {
+				log.Debugf("cors allowed host %s", corsAllowedHost)
 				// Add container filter to enable CORS
 				cors := restful.CrossOriginResourceSharing{
 
-					ExposeHeaders:  []string{"X-My-Header"},
+					AllowedDomains: []string{corsAllowedHost},
+					//ExposeHeaders:  []string{"X-My-Header"},
 					AllowedHeaders: []string{"Content-Type", "Accept"},
 					AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "BATCH"},
 
@@ -156,19 +166,21 @@ func Serve(container *restful.Container, servIndex int) {
 		} else if serverCfg.OpenAPI.Enabled && swaggerUICfg.Entrypoint != "" && swaggerUICfg.Dist != "" {
 			container.Handle(swaggerUICfg.Entrypoint, http.StripPrefix(swaggerUICfg.Entrypoint, http.FileServer(http.Dir(swaggerUICfg.Dist))))
 			if serverCfg.OpenAPI.Enabled && config.OpenAPI.UI.Entrypoint != "" {
-				uiURL, err := url.Parse(swaggerUICfg.URL)
+				//uiURL, err := url.Parse(serverCfg.OpenAPI.Host)
 				//copy
-				apiURL := *uiURL
-				if err != nil {
-					log.Fatalln("swagger ui URL invalid\n", err)
-				}
-				uiURL.Path = path.Join(uiURL.Path, swaggerUICfg.Entrypoint)
-				apiURL.Path = path.Join(apiURL.Path, swaggerUICfg.API)
+				//apiURL := *uiURL
+				//if err != nil {
+				//	log.Fatalln("swagger ui URL invalid\n", err)
+				//}
+
+				uiPath := schema + "://" + path.Join(serverCfg.OpenAPI.Host, swaggerUICfg.Entrypoint)
+				apiPath := schema + "://" + path.Join(serverCfg.OpenAPI.Host, swaggerUICfg.API)
 				redirectURL = fmt.Sprintf("%s?url=%s",
-					uiURL.String(),
-					apiURL.String())
+					uiPath,
+					apiPath)
+				log.Debugf("swagger ui: %s", redirectURL)
 				container.ServeMux.HandleFunc("/open_apidocs", func(w http.ResponseWriter, r *http.Request) {
-					http.Redirect(w, r, redirectURL, 301)
+					http.Redirect(w, r, redirectURL, 302)
 				})
 			}
 		}

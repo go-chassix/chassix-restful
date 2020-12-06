@@ -40,7 +40,6 @@ type OpenAPIConfig struct {
 
 //OpenapiUIConfig swagger ui config
 type OpenapiUIConfig struct {
-	URL        string `yaml:"url"`
 	API        string `yaml:"api"`
 	Dist       string `yaml:"dist"`
 	Entrypoint string `yaml:"entrypoint"`

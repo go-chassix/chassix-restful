@@ -9,8 +9,8 @@ servers:
     description: service 1
     openapi:
       enabled: true
+      host: cloud-mal.changhong.com
       ui:
-        url: http://localhost:8085
         external: http://localhost:8086/apidocs/
   - name: svc-2
     addr: localhost:8086
@@ -23,10 +23,9 @@ servers:
       tags:
         - name: User
           desc: "用户"
-      ui:
-        url: http://localhost:8086
+      host: localhost:8086
 logging:
-  level: info  #0 panic 0 fatal 1 error 2 warn 3 info 4 debug 5 trace 6
+  level: debug  #0 panic 0 fatal 1 error 2 warn 3 info 4 debug 5 trace 6
   report_caller: yes
   no_colors: false
   caller_first: no
