@@ -114,7 +114,7 @@ func Serve(container *restful.Container, servIndex int) {
 
 	log.Debugf("server [%d] config merged: %+v", servIndex, serverCfg.OpenAPI)
 
-	var corsAllowedHost string
+	var corsAllowedHost, redirectURL string
 
 	//if enable openapi setting. register swagger ui and apidocs json API.
 	if serverCfg.OpenAPI.Enabled {
@@ -133,10 +133,11 @@ func Serve(container *restful.Container, servIndex int) {
 			}
 			apiUrl.Path = path.Join(apiUrl.Path, serverCfg.OpenAPI.UI.API)
 			corsAllowedHost = apiUrl.Host
-			fmt.Printf("server [%s] apidocs addr [%s?url=%s]\n",
-				serverCfg.Name,
-				swaggerUICfg.External,
-				apiUrl.String())
+			redirectURL = fmt.Sprintf("%s?url=%s", swaggerUICfg.External, apiUrl.String())
+
+			container.ServeMux.HandleFunc("/open_apidocs", func(w http.ResponseWriter, r *http.Request) {
+				http.Redirect(w, r, redirectURL, 301)
+			})
 			//为OPENAPI添加cors跨域支持
 			if corsAllowedHost != "" {
 				// Add container filter to enable CORS
@@ -152,6 +153,7 @@ func Serve(container *restful.Container, servIndex int) {
 
 				// Add container filter to respond to OPTIONS
 				container.Filter(container.OPTIONSFilter)
+
 			}
 		} else if serverCfg.OpenAPI.Enabled && swaggerUICfg.Entrypoint != "" && swaggerUICfg.Dist != "" {
 			container.Handle(swaggerUICfg.Entrypoint, http.StripPrefix(swaggerUICfg.Entrypoint, http.FileServer(http.Dir(swaggerUICfg.Dist))))
@@ -164,16 +166,17 @@ func Serve(container *restful.Container, servIndex int) {
 				}
 				uiURL.Path = path.Join(uiURL.Path, swaggerUICfg.Entrypoint)
 				apiURL.Path = path.Join(apiURL.Path, swaggerUICfg.API)
-				fmt.Printf("server [%s] apidocs addr [%s?url=%s]\n",
-					serverCfg.Name,
+				redirectURL = fmt.Sprintf("%s?url=%s",
 					uiURL.String(),
 					apiURL.String())
+				container.ServeMux.HandleFunc("/open_apidocs", func(w http.ResponseWriter, r *http.Request) {
+					http.Redirect(w, r, redirectURL, 301)
+				})
 			}
 		}
 	}
 	//启动服务
-	fmt.Printf("server [%s] starting [http://%s]\n", serverCfg.Name, serverCfg.Addr)
-
+	fmt.Printf("[%s] starting [http://%s]\tapidocs:[http://%s]\n", serverCfg.Name, serverCfg.Addr, serverCfg.Addr+"/open_apidocs")
 	log.Fatal(http.ListenAndServe(serverCfg.Addr, container.ServeMux))
 }
 
