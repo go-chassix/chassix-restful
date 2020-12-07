@@ -133,8 +133,8 @@ func Serve(container *restful.Container, servIndex int) {
 		//if setting swagger ui dist will handle swagger ui route
 		if serverCfg.OpenAPI.Enabled && swaggerUICfg.External != "" {
 
-			apiPath := schema + "://" + path.Join(serverCfg.OpenAPI.Host, serverCfg.OpenAPI.UI.API)
-			redirectURL = fmt.Sprintf("%s?url=%s", swaggerUICfg.External, path.Join(serverCfg.OpenAPI.BasePath, apiPath))
+			apiPath := schema + "://" + path.Join(serverCfg.OpenAPI.Host, serverCfg.OpenAPI.BasePath, serverCfg.OpenAPI.UI.API)
+			redirectURL = fmt.Sprintf("%s?url=%s", swaggerUICfg.External, apiPath)
 
 			log.Debugf("swagger ui: %s", redirectURL)
 			container.ServeMux.HandleFunc("/open_apidocs", func(w http.ResponseWriter, r *http.Request) {
