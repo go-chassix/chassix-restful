@@ -2,14 +2,12 @@ package restfulx
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+
 	restfulSpec "github.com/emicklei/go-restful-openapi/v2"
 	"github.com/emicklei/go-restful/v3"
 	"github.com/go-openapi/spec"
-	"github.com/imdario/mergo"
-	"log"
-	"net/http"
-	"net/url"
-	"path"
 
 	"c5x.io/chassix"
 	"c5x.io/logx"
