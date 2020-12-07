@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
+	"path"
 
 	restfulSpec "github.com/emicklei/go-restful-openapi/v2"
 	"github.com/emicklei/go-restful/v3"
 	"github.com/go-openapi/spec"
+	"github.com/imdario/mergo"
 
 	"c5x.io/chassix"
 	"c5x.io/logx"
@@ -124,7 +127,7 @@ func Serve(container *restful.Container, servIndex int) {
 		//定义swagger文档
 		cfg := restfulSpec.Config{
 			WebServices:                   container.RegisteredWebServices(), // you control what services are visible
-			APIPath:                       swaggerUICfg.API,
+			APIPath:                       path.Join(serverCfg.OpenAPI.BasePath, swaggerUICfg.API),
 			PostBuildSwaggerObjectHandler: newPostBuildOpenAPIObjectFunc(serverCfg)}
 		container.Add(restfulSpec.NewOpenAPIService(cfg))
 		//if setting swagger ui dist will handle swagger ui route

@@ -17,7 +17,7 @@ type ServerConfig struct {
 type OpenAPIConfig struct {
 	Enabled  bool     `yaml:"enabled"`
 	Host     string   `yaml:"host"`
-	BasePath string   `yaml:"basePath"`
+	BasePath string   `yaml:"base_path"`
 	Schemas  []string `yaml:"schemas"`
 	Auth     string
 	Spec     struct {
