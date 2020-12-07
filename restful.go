@@ -127,14 +127,14 @@ func Serve(container *restful.Container, servIndex int) {
 		//定义swagger文档
 		cfg := restfulSpec.Config{
 			WebServices:                   container.RegisteredWebServices(), // you control what services are visible
-			APIPath:                       path.Join(serverCfg.OpenAPI.BasePath, swaggerUICfg.API),
+			APIPath:                       swaggerUICfg.API,
 			PostBuildSwaggerObjectHandler: newPostBuildOpenAPIObjectFunc(serverCfg)}
 		container.Add(restfulSpec.NewOpenAPIService(cfg))
 		//if setting swagger ui dist will handle swagger ui route
 		if serverCfg.OpenAPI.Enabled && swaggerUICfg.External != "" {
 
 			apiPath := schema + "://" + path.Join(serverCfg.OpenAPI.Host, serverCfg.OpenAPI.UI.API)
-			redirectURL = fmt.Sprintf("%s?url=%s", swaggerUICfg.External, apiPath)
+			redirectURL = fmt.Sprintf("%s?url=%s", swaggerUICfg.External, path.Join(serverCfg.OpenAPI.BasePath, apiPath)
 
 			log.Debugf("swagger ui: %s", redirectURL)
 			container.ServeMux.HandleFunc("/open_apidocs", func(w http.ResponseWriter, r *http.Request) {
@@ -174,7 +174,7 @@ func Serve(container *restful.Container, servIndex int) {
 				//}
 
 				uiPath := schema + "://" + path.Join(serverCfg.OpenAPI.Host, swaggerUICfg.Entrypoint)
-				apiPath := schema + "://" + path.Join(serverCfg.OpenAPI.Host, swaggerUICfg.API)
+				apiPath := schema + "://" + path.Join(serverCfg.OpenAPI.Host, serverCfg.OpenAPI.BasePath, swaggerUICfg.API)
 				redirectURL = fmt.Sprintf("%s?url=%s",
 					uiPath,
 					apiPath)
