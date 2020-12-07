@@ -150,7 +150,7 @@ func Serve(container *restful.Container, servIndex int) {
 
 						AllowedDomains: []string{externalUIURL.Host},
 						//ExposeHeaders:  []string{"X-My-Header"},
-						AllowedHeaders: []string{"Content-Type", "Accept"},
+						AllowedHeaders: []string{"Content-Type", "Accept", "Authorization", "X-Gateway-User"},
 						AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "BATCH"},
 
 						CookiesAllowed: false,
