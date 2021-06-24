@@ -22,7 +22,6 @@ func init() {
 	})
 }
 
-
 //newPostBuildOpenAPIObjectFunc open api api docs data
 func newPostBuildOpenAPIObjectFunc(config ServerConfig, container *restful.Container) restfulSpec.PostBuildSwaggerObjectFunc {
 	return func(swo *spec.Swagger) {
@@ -88,7 +87,7 @@ func newPostBuildOpenAPIObjectFunc(config ServerConfig, container *restful.Conta
 			swo.SecurityDefinitions = map[string]*spec.SecurityScheme{
 				"jwt": spec.APIKeyAuth("Authorization", "header"),
 			}
-			enrichSwaggerObjectSecurity(swo,container)
+			enrichSwaggerObjectSecurity(swo, container)
 		}
 
 	}
@@ -125,7 +124,7 @@ func Serve(container *restful.Container, servIndex int) {
 		cfg := restfulSpec.Config{
 			WebServices:                   container.RegisteredWebServices(), // you control what services are visible
 			APIPath:                       swaggerUICfg.API,
-			PostBuildSwaggerObjectHandler: newPostBuildOpenAPIObjectFunc(serverCfg,container)}
+			PostBuildSwaggerObjectHandler: newPostBuildOpenAPIObjectFunc(serverCfg, container)}
 		container.Add(restfulSpec.NewOpenAPIService(cfg))
 		//if setting swagger ui dist will handle swagger ui route
 		if serverCfg.OpenAPI.Enabled && swaggerUICfg.External != "" {
@@ -209,5 +208,17 @@ func AddMetaDataTags(ws *restful.WebService, tags []string) {
 			continue
 		}
 		routes[i].Metadata[KeyOpenAPITags] = tags
+	}
+}
+
+//AddJwtAuth add metadata tags to Webservice all routes
+func AddJwtAuth(ws *restful.WebService, ff restful.FilterFunction) {
+	ws.Filter(ff)
+	routes := ws.Routes()
+	for i, route := range routes {
+		if route.Metadata == nil {
+			routes[i].Metadata = map[string]interface{}{}
+		}
+		routes[i].Metadata[SecurityDefinitionKey] = OAISecurity{Name: "jwt"}
 	}
 }
