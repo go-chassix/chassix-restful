@@ -2,7 +2,6 @@ package restfulx
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"path"
@@ -23,16 +22,9 @@ func init() {
 	})
 }
 
-const (
-	// KeyOpenAPITags is a Metadata key for a restful Route
-
-	KeyOpenAPITags = restfulSpec.KeyOpenAPITags
-
-	SecurityDefinitionKey = "OAPI_SECURITY_DEFINITION"
-)
 
 //newPostBuildOpenAPIObjectFunc open api api docs data
-func newPostBuildOpenAPIObjectFunc(config ServerConfig) restfulSpec.PostBuildSwaggerObjectFunc {
+func newPostBuildOpenAPIObjectFunc(config ServerConfig, container *restful.Container) restfulSpec.PostBuildSwaggerObjectFunc {
 	return func(swo *spec.Swagger) {
 		swo.Host = config.OpenAPI.Host
 		swo.BasePath = config.OpenAPI.BasePath
@@ -92,6 +84,11 @@ func newPostBuildOpenAPIObjectFunc(config ServerConfig) restfulSpec.PostBuildSwa
 			auth := make(map[string][]string)
 			auth["basicAuth"] = []string{}
 			swo.Security = append(swo.Security, auth)
+		} else if config.OpenAPI.Auth == "jwt" {
+			swo.SecurityDefinitions = map[string]*spec.SecurityScheme{
+				"jwt": spec.APIKeyAuth("Authorization", "header"),
+			}
+			enrichSwaggerObjectSecurity(swo,container)
 		}
 
 	}
@@ -128,7 +125,7 @@ func Serve(container *restful.Container, servIndex int) {
 		cfg := restfulSpec.Config{
 			WebServices:                   container.RegisteredWebServices(), // you control what services are visible
 			APIPath:                       swaggerUICfg.API,
-			PostBuildSwaggerObjectHandler: newPostBuildOpenAPIObjectFunc(serverCfg)}
+			PostBuildSwaggerObjectHandler: newPostBuildOpenAPIObjectFunc(serverCfg,container)}
 		container.Add(restfulSpec.NewOpenAPIService(cfg))
 		//if setting swagger ui dist will handle swagger ui route
 		if serverCfg.OpenAPI.Enabled && swaggerUICfg.External != "" {
